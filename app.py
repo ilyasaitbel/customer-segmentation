@@ -11,7 +11,7 @@ from sklearn.preprocessing import StandardScaler
 import streamlit as st
 
 # ==============================================================================
-# 1. PAGE CONFIGURATION & LIGHT SKY-BLUE SAAS THEME
+# 1. PAGE CONFIGURATION & HARMONIOUS SKY-BLUE THEME
 # ==============================================================================
 st.set_page_config(
     page_title="SegmentPulse | Customer RFM Intelligence",
@@ -20,179 +20,216 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Professional Human-Designed Light Sky Blue Theme (Stripe / Tailwind UI style)
+# High-Contrast Harmonious Sky-Blue Palette
+# Background: #F0F9FF (Soft Sky) | Cards: #FFFFFF | Text: #0F172A (Deep Slate Navy) | Accents: #0284C7, #0369A1
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-    html, body, [class*="css"] {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        color: #0f172a;
+    /* Global reset for maximum contrast & harmony */
+    html, body, [class*="css"], .stApp {
+        font-family: 'Plus Jakarta Sans', -apple-system, sans-serif !important;
+        background-color: #f0f9ff !important;
+        color: #0f172a !important;
     }
 
-    /* Main background */
-    .stApp {
-        background: linear-gradient(180deg, #f0f9ff 0%, #f8fafc 400px, #ffffff 100%);
+    /* Force all headings to high-contrast deep slate navy */
+    h1, h2, h3, h4, h5, h6, .stMarkdown p, .stMarkdown span {
+        color: #0f172a !important;
     }
 
-    /* Header Bar */
+    /* Sidebar full harmonization */
+    section[data-testid="stSidebar"] {
+        background-color: #e0f2fe !important;
+        border-right: 1px solid #bae6fd !important;
+    }
+    section[data-testid="stSidebar"] * {
+        color: #0f172a !important;
+    }
+    section[data-testid="stSidebar"] a {
+        color: #0284c7 !important;
+        font-weight: 600 !important;
+        text-decoration: underline !important;
+    }
+
+    /* Navbar Container */
     .saas-navbar {
         display: flex;
         justify-content: space-between;
         align-items: center;
         background: #ffffff;
-        border: 1px solid #bae6fd;
-        border-radius: 12px;
-        padding: 1.2rem 1.8rem;
+        border: 2px solid #bae6fd;
+        border-radius: 14px;
+        padding: 1.4rem 2rem;
         margin-bottom: 1.5rem;
-        box-shadow: 0 4px 14px -3px rgba(14, 165, 233, 0.08);
+        box-shadow: 0 4px 16px rgba(2, 132, 199, 0.08);
     }
     .brand-title {
-        font-size: 1.6rem;
-        font-weight: 700;
-        color: #0369a1;
+        font-size: 1.85rem !important;
+        font-weight: 800 !important;
+        color: #0369a1 !important;
         letter-spacing: -0.02em;
-        margin: 0;
+        margin: 0 !important;
     }
     .brand-subtitle {
-        font-size: 0.88rem;
-        color: #64748b;
-        margin-top: 2px;
-        margin-bottom: 0;
+        font-size: 0.92rem !important;
+        color: #334155 !important;
+        margin-top: 4px !important;
+        margin-bottom: 0 !important;
+        font-weight: 500 !important;
     }
     .status-badge {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
         background: #e0f2fe;
-        color: #0284c7;
-        border: 1px solid #bae6fd;
-        padding: 0.35rem 0.8rem;
+        color: #0369a1 !important;
+        border: 1.5px solid #7dd3fc;
+        padding: 0.45rem 1rem;
         border-radius: 20px;
-        font-size: 0.78rem;
-        font-weight: 600;
+        font-size: 0.82rem;
+        font-weight: 700;
         letter-spacing: 0.02em;
     }
     .dot-pulse {
-        width: 7px;
-        height: 7px;
+        width: 8px;
+        height: 8px;
         border-radius: 50%;
         background-color: #0284c7;
+        box-shadow: 0 0 6px #0284c7;
     }
 
     /* KPI Cards */
     .kpi-card {
         background: #ffffff;
-        border: 1px solid #e0f2fe;
-        border-radius: 12px;
-        padding: 1.25rem 1.4rem;
-        box-shadow: 0 2px 6px rgba(14, 165, 233, 0.05);
-        transition: transform 0.15s ease, border-color 0.15s ease;
+        border: 1.5px solid #bae6fd;
+        border-radius: 14px;
+        padding: 1.3rem 1.4rem;
+        box-shadow: 0 3px 10px rgba(2, 132, 199, 0.06);
+        transition: all 0.2s ease;
     }
     .kpi-card:hover {
-        border-color: #7dd3fc;
+        border-color: #0284c7;
         transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(2, 132, 199, 0.12);
     }
     .kpi-label {
         font-size: 0.78rem;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        font-weight: 600;
-        color: #64748b;
+        font-weight: 700;
+        color: #475569;
     }
     .kpi-val {
-        font-size: 1.75rem;
-        font-weight: 700;
+        font-size: 1.85rem;
+        font-weight: 800;
         color: #0f172a;
-        margin: 0.25rem 0;
+        margin: 0.3rem 0;
     }
     .kpi-sub {
-        font-size: 0.78rem;
-        font-weight: 500;
+        font-size: 0.8rem;
+        font-weight: 600;
         color: #0284c7;
     }
 
-    /* Card Panels */
+    /* Content Panels */
     .panel-card {
         background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
+        border: 1.5px solid #bae6fd;
+        border-radius: 14px;
         padding: 1.4rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        box-shadow: 0 2px 8px rgba(2, 132, 199, 0.05);
         margin-bottom: 1.2rem;
     }
-    .panel-header {
-        font-size: 1.05rem;
-        font-weight: 600;
+    .panel-title {
+        font-size: 1.1rem;
+        font-weight: 700;
         color: #0f172a;
         margin-bottom: 0.8rem;
-        border-bottom: 1px solid #f1f5f9;
-        padding-bottom: 0.6rem;
+        border-bottom: 1.5px solid #e0f2fe;
+        padding-bottom: 0.5rem;
     }
 
     /* Result Panel in Predictor */
     .result-panel {
-        background: #f0f9ff;
-        border: 1.5px solid #7dd3fc;
-        border-radius: 12px;
-        padding: 1.5rem;
+        background: #ffffff;
+        border: 2px solid #0284c7;
+        border-radius: 14px;
+        padding: 1.6rem;
         text-align: center;
-        margin-top: 0.5rem;
+        box-shadow: 0 6px 20px rgba(2, 132, 199, 0.1);
     }
     .result-badge {
         display: inline-block;
-        font-size: 0.75rem;
+        font-size: 0.78rem;
         font-weight: 700;
-        letter-spacing: 0.05em;
         text-transform: uppercase;
         color: #0369a1;
         background: #e0f2fe;
-        padding: 3px 10px;
+        border: 1px solid #bae6fd;
+        padding: 4px 12px;
         border-radius: 6px;
         margin-bottom: 0.6rem;
     }
     .result-title {
-        font-size: 1.85rem;
-        font-weight: 700;
+        font-size: 2rem;
+        font-weight: 800;
         color: #0284c7;
-        margin: 0.2rem 0;
+        margin: 0.3rem 0;
     }
     .result-description {
-        font-size: 0.88rem;
-        color: #475569;
-        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        color: #334155;
+        margin-bottom: 1.1rem;
+        font-weight: 500;
     }
     .action-box {
-        background: #ffffff;
-        border: 1px solid #bae6fd;
+        background: #f0f9ff;
+        border: 1.5px solid #bae6fd;
         border-radius: 8px;
-        padding: 0.9rem;
+        padding: 1rem;
         text-align: left;
-        font-size: 0.84rem;
-        color: #1e293b;
+        font-size: 0.86rem;
+        color: #0f172a;
         line-height: 1.5;
     }
 
-    /* Custom Streamlit adjustments for light theme */
-    div[data-testid="stSidebar"] {
-        background-color: #f8fafc;
-        border-right: 1px solid #e2e8f0;
-    }
+    /* Streamlit Tabs Styling */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        border-bottom: 2px solid #e2e8f0;
+        gap: 10px;
+        border-bottom: 2px solid #bae6fd;
+        margin-bottom: 1.2rem;
     }
     .stTabs [data-baseweb="tab"] {
-        font-weight: 500;
-        color: #64748b;
-        padding: 8px 16px;
-        border-radius: 6px 6px 0 0;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        color: #475569 !important;
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-bottom: none !important;
+        border-radius: 8px 8px 0 0 !important;
+        padding: 10px 18px !important;
     }
     .stTabs [aria-selected="true"] {
         color: #0284c7 !important;
+        background: #e0f2fe !important;
+        border: 1.5px solid #0284c7 !important;
+        border-bottom: none !important;
+    }
+
+    /* Primary buttons */
+    .stButton>button {
+        background-color: #0284c7 !important;
+        color: #ffffff !important;
         font-weight: 600 !important;
-        border-bottom: 2px solid #0284c7 !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1rem !important;
+        transition: background-color 0.2s ease !important;
+    }
+    .stButton>button:hover {
+        background-color: #0369a1 !important;
     }
     </style>
     """,
@@ -217,13 +254,13 @@ SEGMENT_DETAILS = {
         "strategy": "Dedicated VIP loyalty tier, priority support access, and early product previews.",
     },
     "Clients intermediaires": {
-        "color": "#38bdf8",
+        "color": "#0ea5e9",
         "label": "Core Regular Buyers",
         "desc": "Reliable repeat customers with consistent purchase cycles.",
         "strategy": "Product bundle recommendations, free shipping thresholds, and targeted cross-sell workflows.",
     },
     "Clients occasionnels / inactifs": {
-        "color": "#94a3b8",
+        "color": "#64748b",
         "label": "At-Risk / Dormant Accounts",
         "desc": "High inactivity duration with minimal historical transactions.",
         "strategy": "Automated re-engagement sequences, limited-time return incentives, and feedback surveys.",
@@ -352,55 +389,53 @@ profile_df = bundle["profile"].copy()
 profile_df["Segment"] = profile_df.index.map(segment_names)
 
 # ==============================================================================
-# 3. SIDEBAR NAVIGATION & SYSTEM SETTINGS
+# 3. SIDEBAR NAVIGATION
 # ==============================================================================
 with st.sidebar:
     st.markdown(
         """
-        <div style="padding-bottom: 0.8rem; border-bottom: 1px solid #e2e8f0; margin-bottom: 1.2rem;">
-            <div style="font-size: 1.15rem; font-weight: 700; color: #0284c7; letter-spacing: -0.02em;">SegmentPulse</div>
-            <div style="font-size: 0.78rem; color: #64748b;">Enterprise RFM Analytics</div>
+        <div style="padding-bottom: 0.8rem; border-bottom: 1.5px solid #bae6fd; margin-bottom: 1.2rem;">
+            <div style="font-size: 1.25rem; font-weight: 800; color: #0369a1; letter-spacing: -0.02em;">SegmentPulse</div>
+            <div style="font-size: 0.82rem; color: #334155; font-weight: 600;">Enterprise RFM Intelligence</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    st.markdown("**Workspace Context**")
+    st.markdown("<strong style='color:#0f172a;'>Storefront Scope</strong>", unsafe_allow_html=True)
     selected_org = st.selectbox(
         "Store Scope",
         ["Production Storefront (UK)", "Wholesale Direct", "Retail Partner Network"],
         label_visibility="collapsed",
     )
 
-    st.markdown("---")
-    st.markdown("**System Information**")
+    st.markdown("<br><strong style='color:#0f172a;'>System Information</strong>", unsafe_allow_html=True)
     st.markdown(
         f"""
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; font-size: 0.82rem; line-height: 1.6;">
+        <div style="background: #ffffff; border: 1.5px solid #bae6fd; border-radius: 10px; padding: 12px; font-size: 0.82rem; line-height: 1.7; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div style="display:flex; justify-content:space-between;">
-                <span style="color:#64748b;">Classifier:</span>
-                <span style="font-weight:600; color:#0f172a;">Random Forest (200)</span>
+                <span style="color:#475569; font-weight: 500;">Classifier:</span>
+                <span style="font-weight:700; color:#0f172a;">Random Forest (200)</span>
             </div>
             <div style="display:flex; justify-content:space-between;">
-                <span style="color:#64748b;">Clusters:</span>
-                <span style="font-weight:600; color:#0f172a;">K-Means (k=3)</span>
+                <span style="color:#475569; font-weight: 500;">Clusters:</span>
+                <span style="font-weight:700; color:#0f172a;">K-Means (k=3)</span>
             </div>
             <div style="display:flex; justify-content:space-between;">
-                <span style="color:#64748b;">Records:</span>
-                <span style="font-weight:600; color:#0284c7;">{len(rfm_df):,} accounts</span>
+                <span style="color:#475569; font-weight: 500;">Indexed Accounts:</span>
+                <span style="font-weight:800; color:#0284c7;">{len(rfm_df):,}</span>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    st.markdown("---")
-    st.markdown("**Documentation & Links**")
+    st.markdown("<br><strong style='color:#0f172a;'>Project References</strong>", unsafe_allow_html=True)
     st.markdown(
         """
         - [GitHub Repository](https://github.com/ilyasaitbel/customer-segmentation)
-        - [Model Artifacts (PKL)](file:///C:/Users/Youcode/.gemini/antigravity/scratch/customer-segmentation/models/customer_segmentation_model.pkl)
-        - [Source Code (app.py)](file:///C:/Users/Youcode/.gemini/antigravity/scratch/customer-segmentation/app.py)
+        - [Local Source (app.py)](file:///C:/Users/Youcode/.gemini/antigravity/scratch/customer-segmentation/app.py)
+        - [Model Binary (.pkl)](file:///C:/Users/Youcode/.gemini/antigravity/scratch/customer-segmentation/models/customer_segmentation_model.pkl)
         """
     )
     st.caption("Release 2.4 • Managed Environment")
@@ -457,8 +492,8 @@ with kpi_c2:
         f"""
         <div class="kpi-card">
             <div class="kpi-label">High-Value Segment</div>
-            <div class="kpi-val">{vip_records:,} <span style="font-size: 1rem; color: #0284c7; font-weight: 500;">({vip_percent:.1f}%)</span></div>
-            <div class="kpi-sub">{vip_gross_share:.1f}% of total gross revenue</div>
+            <div class="kpi-val">{vip_records:,} <span style="font-size: 0.95rem; color: #0284c7; font-weight: 600;">({vip_percent:.1f}%)</span></div>
+            <div class="kpi-sub">{vip_gross_share:.1f}% of total revenue</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -491,7 +526,7 @@ with kpi_c4:
 st.write("")
 
 # ==============================================================================
-# 5. WORKSPACE TABS (CLEAN HUMAN-CRAFTED DESIGN)
+# 5. TABS WITH HIGH-CONTRAST PALETTE
 # ==============================================================================
 tab_analytics, tab_sim, tab_data, tab_sys = st.tabs(
     [
@@ -503,9 +538,9 @@ tab_analytics, tab_sim, tab_data, tab_sys = st.tabs(
 )
 
 sky_colors = {
-    "Clients a forte valeur": "#0284c7",
-    "Clients intermediaires": "#38bdf8",
-    "Clients occasionnels / inactifs": "#94a3b8",
+    "Clients a forte valeur": "#0284c7",       # Vibrant Sky Blue
+    "Clients intermediaires": "#38bdf8",       # Light Azure
+    "Clients occasionnels / inactifs": "#94a3b8", # Crisp Slate Grey
 }
 
 # ------------------------------------------------------------------------------
@@ -515,7 +550,7 @@ with tab_analytics:
     ch_col1, ch_col2 = st.columns([1, 1])
 
     with ch_col1:
-        st.markdown("##### Account Distribution by Segment")
+        st.markdown("<h4 style='color:#0f172a; margin-bottom: 0.5rem;'>Account Distribution by Segment</h4>", unsafe_allow_html=True)
         counts = rfm_df["Segment"].value_counts().reset_index()
         counts.columns = ["Segment", "Count"]
 
@@ -535,17 +570,17 @@ with tab_analytics:
         )
         fig_pie.update_layout(
             template="plotly_white",
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#334155", family="Inter"),
+            paper_bgcolor="#ffffff",
+            plot_bgcolor="#ffffff",
+            font=dict(color="#0f172a", family="Plus Jakarta Sans", size=13),
             showlegend=False,
             margin=dict(t=15, b=15, l=15, r=15),
-            height=300,
+            height=320,
         )
         st.plotly_chart(fig_pie, use_container_width=True)
 
     with ch_col2:
-        st.markdown("##### Total Gross Revenue by Segment")
+        st.markdown("<h4 style='color:#0f172a; margin-bottom: 0.5rem;'>Total Gross Revenue by Segment</h4>", unsafe_allow_html=True)
         rev_by_seg = rfm_df.groupby("Segment")["Montant"].sum().reset_index()
 
         fig_bar = px.bar(
@@ -558,19 +593,19 @@ with tab_analytics:
         )
         fig_bar.update_layout(
             template="plotly_white",
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#334155", family="Inter"),
-            xaxis=dict(showgrid=False, title=""),
-            yaxis=dict(showgrid=True, gridcolor="#f1f5f9", title="Gross Revenue (€)"),
+            paper_bgcolor="#ffffff",
+            plot_bgcolor="#ffffff",
+            font=dict(color="#0f172a", family="Plus Jakarta Sans", size=13),
+            xaxis=dict(showgrid=False, title="", tickfont=dict(color="#0f172a", size=12)),
+            yaxis=dict(showgrid=True, gridcolor="#e2e8f0", title="Gross Revenue (€)", title_font=dict(color="#0f172a")),
             showlegend=False,
             margin=dict(t=15, b=15, l=15, r=15),
-            height=300,
+            height=320,
         )
         st.plotly_chart(fig_bar, use_container_width=True)
 
     st.markdown("---")
-    st.markdown("##### Interactive 3D RFM Clustering Space")
+    st.markdown("<h4 style='color:#0f172a;'>Interactive 3D RFM Clustering Space</h4>", unsafe_allow_html=True)
     st.caption("Rotate, pan, and zoom to explore how K-Means partitions customers across Recency, Frequency, and Monetary dimensions.")
 
     sample_rfm = rfm_df.sample(n=min(1200, len(rfm_df)), random_state=42)
@@ -583,25 +618,25 @@ with tab_analytics:
         color="Segment",
         color_discrete_map=sky_colors,
         hover_data=["CustomerID", "Recence", "Frequence", "Montant"],
-        opacity=0.75,
+        opacity=0.8,
         log_z=True,
     )
     fig_3d.update_layout(
         template="plotly_white",
         paper_bgcolor="#ffffff",
-        font=dict(color="#334155", family="Inter"),
+        font=dict(color="#0f172a", family="Plus Jakarta Sans"),
         scene=dict(
-            xaxis=dict(title="Recency (Days)", backgroundcolor="#f0f9ff", gridcolor="#e2e8f0"),
-            yaxis=dict(title="Frequency (Orders)", backgroundcolor="#f0f9ff", gridcolor="#e2e8f0"),
-            zaxis=dict(title="Monetary Log (€)", backgroundcolor="#f0f9ff", gridcolor="#e2e8f0"),
+            xaxis=dict(title="Recency (Days)", backgroundcolor="#f0f9ff", gridcolor="#bae6fd", tickfont=dict(color="#0f172a")),
+            yaxis=dict(title="Frequency (Orders)", backgroundcolor="#f0f9ff", gridcolor="#bae6fd", tickfont=dict(color="#0f172a")),
+            zaxis=dict(title="Monetary Log (€)", backgroundcolor="#f0f9ff", gridcolor="#bae6fd", tickfont=dict(color="#0f172a")),
         ),
         margin=dict(l=0, r=0, b=0, t=10),
-        height=500,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        height=520,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(color="#0f172a")),
     )
     st.plotly_chart(fig_3d, use_container_width=True)
 
-    st.markdown("##### Lifecycle Marketing Strategic Playbooks")
+    st.markdown("<h4 style='color:#0f172a;'>Lifecycle Marketing Strategic Playbooks</h4>", unsafe_allow_html=True)
     strat1, strat2, strat3 = st.columns(3)
 
     for col, (k, meta) in zip([strat1, strat2, strat3], SEGMENT_DETAILS.items()):
@@ -609,13 +644,13 @@ with tab_analytics:
         with col:
             st.markdown(
                 f"""
-                <div class="panel-card" style="border-top: 3px solid {meta['color']};">
+                <div class="panel-card" style="border-top: 4px solid {meta['color']};">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                        <span style="font-weight:700; color:#0f172a; font-size: 1rem;">{meta['label']}</span>
-                        <span style="font-size:0.75rem; background:#f0f9ff; color:#0284c7; padding:2px 8px; border-radius:4px; font-weight:600;">{sub_count:,} accounts</span>
+                        <span style="font-weight:800; color:#0f172a; font-size: 1.05rem;">{meta['label']}</span>
+                        <span style="font-size:0.75rem; background:#e0f2fe; color:#0369a1; border: 1px solid #bae6fd; padding:3px 8px; border-radius:6px; font-weight:700;">{sub_count:,} accounts</span>
                     </div>
-                    <div style="font-size:0.82rem; color:#64748b; margin-bottom:12px;">{meta['desc']}</div>
-                    <div style="background:#f8fafc; border: 1px solid #e2e8f0; border-radius:6px; padding:10px; font-size:0.8rem; color:#1e293b; line-height:1.45;">
+                    <div style="font-size:0.84rem; color:#475569; margin-bottom:12px; font-weight: 500;">{meta['desc']}</div>
+                    <div style="background:#f0f9ff; border: 1.5px solid #bae6fd; border-radius:8px; padding:12px; font-size:0.84rem; color:#0f172a; line-height:1.5;">
                         <strong style="color:#0284c7;">Action Framework:</strong><br>{meta['strategy']}
                     </div>
                 </div>
@@ -627,10 +662,9 @@ with tab_analytics:
 # TAB 2: CUSTOMER SIMULATOR
 # ------------------------------------------------------------------------------
 with tab_sim:
-    st.markdown("##### Real-Time Behavioral RFM Predictor")
+    st.markdown("<h4 style='color:#0f172a;'>Real-Time Behavioral RFM Predictor</h4>", unsafe_allow_html=True)
     st.caption("Adjust customer behavioral indicators or select a preset profile to test the classification engine.")
 
-    # Presets with clean text labels (no childish emojis)
     b_col1, b_col2, b_col3 = st.columns(3)
     if "s_r" not in st.session_state:
         st.session_state.s_r = 14
@@ -662,7 +696,7 @@ with tab_sim:
         st.markdown(
             """
             <div class="panel-card">
-                <div class="panel-header">Behavioral Input Parameters</div>
+                <div class="panel-title">Behavioral Input Parameters</div>
             """,
             unsafe_allow_html=True,
         )
@@ -716,7 +750,7 @@ with tab_sim:
                 <div class="result-title">{details['label']}</div>
                 <div class="result-description">{details['desc']}</div>
                 <div class="action-box">
-                    <strong style="color: #0284c7;">Automated Next-Best-Action:</strong><br>
+                    <strong style="color: #0369a1;">Automated Next-Best-Action:</strong><br>
                     {details['strategy']}
                 </div>
             </div>
@@ -725,18 +759,18 @@ with tab_sim:
         )
 
         st.write("")
-        st.markdown("##### Class Probability Distribution")
+        st.markdown("<h5 style='color:#0f172a;'>Class Probability Distribution</h5>", unsafe_allow_html=True)
         for c_idx, p_val in zip(class_list, probs):
             c_name = segment_names.get(c_idx, f"Cluster {c_idx}")
             c_label = SEGMENT_DETAILS.get(c_name, {}).get("label", c_name)
-            st.write(f"**{c_label}** — `{p_val*100:.1f}%`")
+            st.markdown(f"<strong style='color:#0f172a;'>{c_label}</strong> — <code style='color:#0369a1; font-weight:700;'>{p_val*100:.1f}%</code>", unsafe_allow_html=True)
             st.progress(float(p_val))
 
 # ------------------------------------------------------------------------------
 # TAB 3: CUSTOMER DIRECTORY & EXPORT
 # ------------------------------------------------------------------------------
 with tab_data:
-    st.markdown("##### Customer Database Directory")
+    st.markdown("<h4 style='color:#0f172a;'>Customer Database Directory</h4>", unsafe_allow_html=True)
     st.caption("Filter and export segmented customer accounts for synchronisation with marketing automation and CRM tooling.")
 
     f1, f2, f3 = st.columns(3)
@@ -758,7 +792,7 @@ with tab_data:
     if search_id.strip():
         data_view = data_view[data_view["CustomerID"].astype(str).str.contains(search_id.strip())]
 
-    st.markdown(f"**{len(data_view):,} accounts match the active filter criteria**")
+    st.markdown(f"<strong style='color:#0f172a;'>{len(data_view):,} accounts match the active filter criteria</strong>", unsafe_allow_html=True)
 
     formatted_table = data_view[["CustomerID", "Segment", "Recence", "Frequence", "Montant"]].copy()
     formatted_table["Montant"] = formatted_table["Montant"].map(lambda x: f"{x:,.2f} €")
@@ -788,13 +822,13 @@ with tab_data:
 # TAB 4: MODEL GOVERNANCE & DIAGNOSTICS
 # ------------------------------------------------------------------------------
 with tab_sys:
-    st.markdown("##### Machine Learning Governance & Explainability")
+    st.markdown("<h4 style='color:#0f172a;'>Machine Learning Governance & Explainability</h4>", unsafe_allow_html=True)
     st.caption("Feature contribution factors, cluster centers, and validation metrics.")
 
     gov_c1, gov_c2 = st.columns([1, 1])
 
     with gov_c1:
-        st.markdown("###### Feature Importance (Random Forest Gini Impurity)")
+        st.markdown("<h5 style='color:#0f172a;'>Feature Importance (Random Forest Gini Impurity)</h5>", unsafe_allow_html=True)
         feat_imp = rf_model.feature_importances_
         imp_df = pd.DataFrame({
             "Feature": ["Recency Window", "Order Frequency", "Monetary Expenditure"],
@@ -812,11 +846,11 @@ with tab_sys:
         )
         fig_fi.update_layout(
             template="plotly_white",
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#334155", family="Inter"),
-            xaxis=dict(showgrid=True, gridcolor="#f1f5f9", title="Relative Weight"),
-            yaxis=dict(title=""),
+            paper_bgcolor="#ffffff",
+            plot_bgcolor="#ffffff",
+            font=dict(color="#0f172a", family="Plus Jakarta Sans", size=13),
+            xaxis=dict(showgrid=True, gridcolor="#e2e8f0", title="Relative Weight", title_font=dict(color="#0f172a")),
+            yaxis=dict(title="", tickfont=dict(color="#0f172a", size=12)),
             coloraxis_showscale=False,
             height=260,
             margin=dict(t=10, b=10, l=10, r=10),
@@ -824,7 +858,7 @@ with tab_sys:
         st.plotly_chart(fig_fi, use_container_width=True)
 
     with gov_c2:
-        st.markdown("###### Cluster Centroids (Mean Baseline)")
+        st.markdown("<h5 style='color:#0f172a;'>Cluster Centroids (Mean Baseline)</h5>", unsafe_allow_html=True)
         centroid_view = profile_df.copy()
         centroid_view["Montant"] = centroid_view["Montant"].map(lambda x: f"{x:,.2f} €")
         centroid_view["Recence"] = centroid_view["Recence"].map(lambda x: f"{x:.1f} days")
@@ -841,7 +875,7 @@ with tab_sys:
         st.dataframe(centroid_view[["Segment", "Mean Recency", "Mean Frequency", "Mean Spend"]], use_container_width=True, height=260)
 
     st.markdown("---")
-    st.markdown("###### Architecture References & Governance")
+    st.markdown("<h5 style='color:#0f172a;'>Architecture References & Governance</h5>", unsafe_allow_html=True)
     st.markdown(
         """
         - **Pipeline Pipeline:** `Log1p -> StandardScaler -> KMeans(k=3) -> RandomForestClassifier(n_estimators=200)`
