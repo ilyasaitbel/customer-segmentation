@@ -1,11 +1,9 @@
-import sys
 from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
@@ -13,160 +11,188 @@ from sklearn.preprocessing import StandardScaler
 import streamlit as st
 
 # ==============================================================================
-# 1. PAGE CONFIGURATION & THEME
+# 1. PAGE CONFIGURATION & LIGHT SKY-BLUE SAAS THEME
 # ==============================================================================
 st.set_page_config(
-    page_title="SegmentPulse AI | Customer Intelligence Suite",
-    page_icon="⚡",
+    page_title="SegmentPulse | Customer RFM Intelligence",
+    page_icon="https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# Premium SaaS Custom CSS (Modern Slate / Glassmorphism / Indigo Theme)
+# Professional Human-Designed Light Sky Blue Theme (Stripe / Tailwind UI style)
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
     html, body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: #0f172a;
     }
 
-    /* Top App Bar & Brand */
-    .saas-header {
+    /* Main background */
+    .stApp {
+        background: linear-gradient(180deg, #f0f9ff 0%, #f8fafc 400px, #ffffff 100%);
+    }
+
+    /* Header Bar */
+    .saas-navbar {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
-        padding: 1.8rem 2.2rem;
-        border-radius: 18px;
-        margin-bottom: 1.8rem;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.4);
+        background: #ffffff;
+        border: 1px solid #bae6fd;
+        border-radius: 12px;
+        padding: 1.2rem 1.8rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 14px -3px rgba(14, 165, 233, 0.08);
     }
-    .saas-title {
-        font-size: 2.1rem;
-        font-weight: 800;
-        letter-spacing: -0.03em;
-        background: linear-gradient(90deg, #ffffff 0%, #cbd5e1 50%, #818cf8 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    .brand-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #0369a1;
+        letter-spacing: -0.02em;
         margin: 0;
     }
-    .saas-tagline {
-        color: #94a3b8;
-        font-size: 0.95rem;
-        margin-top: 0.3rem;
+    .brand-subtitle {
+        font-size: 0.88rem;
+        color: #64748b;
+        margin-top: 2px;
         margin-bottom: 0;
-        font-weight: 400;
     }
-    .badge-pill {
+    .status-badge {
         display: inline-flex;
         align-items: center;
-        padding: 0.35rem 0.85rem;
-        border-radius: 9999px;
+        gap: 6px;
+        background: #e0f2fe;
+        color: #0284c7;
+        border: 1px solid #bae6fd;
+        padding: 0.35rem 0.8rem;
+        border-radius: 20px;
         font-size: 0.78rem;
         font-weight: 600;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        background: rgba(99, 102, 241, 0.2);
-        color: #a5b4fc;
-        border: 1px solid rgba(165, 180, 252, 0.3);
+        letter-spacing: 0.02em;
     }
-    .status-live {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
+    .dot-pulse {
+        width: 7px;
+        height: 7px;
         border-radius: 50%;
-        background-color: #10b981;
-        margin-right: 6px;
-        box-shadow: 0 0 8px #10b981;
+        background-color: #0284c7;
     }
 
-    /* KPI Metric Cards */
-    .kpi-container {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1.2rem;
-        margin-bottom: 1.8rem;
-    }
+    /* KPI Cards */
     .kpi-card {
-        background: #1e293b;
-        border: 1px solid rgba(255, 255, 255, 0.07);
-        border-radius: 16px;
-        padding: 1.3rem 1.4rem;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        background: #ffffff;
+        border: 1px solid #e0f2fe;
+        border-radius: 12px;
+        padding: 1.25rem 1.4rem;
+        box-shadow: 0 2px 6px rgba(14, 165, 233, 0.05);
+        transition: transform 0.15s ease, border-color 0.15s ease;
     }
     .kpi-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 25px rgba(99, 102, 241, 0.15);
-        border-color: rgba(99, 102, 241, 0.4);
+        border-color: #7dd3fc;
+        transform: translateY(-2px);
     }
     .kpi-label {
-        font-size: 0.82rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        font-weight: 600;
-        color: #94a3b8;
-    }
-    .kpi-value {
-        font-size: 1.85rem;
-        font-weight: 800;
-        color: #f8fafc;
-        margin: 0.3rem 0;
-    }
-    .kpi-badge {
         font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
         font-weight: 600;
-        padding: 0.2rem 0.5rem;
-        border-radius: 6px;
+        color: #64748b;
     }
-    .kpi-badge-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-    .kpi-badge-blue  { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
-    .kpi-badge-purple{ background: rgba(168, 85, 247, 0.15); color: #c084fc; }
-    .kpi-badge-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .kpi-val {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0.25rem 0;
+    }
+    .kpi-sub {
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: #0284c7;
+    }
 
-    /* Segment Highlight Cards */
-    .segment-card {
+    /* Card Panels */
+    .panel-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
         padding: 1.4rem;
-        border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: #1e293b;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        margin-bottom: 1.2rem;
+    }
+    .panel-header {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #0f172a;
+        margin-bottom: 0.8rem;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 0.6rem;
+    }
+
+    /* Result Panel in Predictor */
+    .result-panel {
+        background: #f0f9ff;
+        border: 1.5px solid #7dd3fc;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        margin-top: 0.5rem;
+    }
+    .result-badge {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: #0369a1;
+        background: #e0f2fe;
+        padding: 3px 10px;
+        border-radius: 6px;
+        margin-bottom: 0.6rem;
+    }
+    .result-title {
+        font-size: 1.85rem;
+        font-weight: 700;
+        color: #0284c7;
+        margin: 0.2rem 0;
+    }
+    .result-description {
+        font-size: 0.88rem;
+        color: #475569;
         margin-bottom: 1rem;
     }
-    .segment-card.vip {
-        border-left: 5px solid #10b981;
-    }
-    .segment-card.inter {
-        border-left: 5px solid #6366f1;
-    }
-    .segment-card.churn {
-        border-left: 5px solid #f59e0b;
+    .action-box {
+        background: #ffffff;
+        border: 1px solid #bae6fd;
+        border-radius: 8px;
+        padding: 0.9rem;
+        text-align: left;
+        font-size: 0.84rem;
+        color: #1e293b;
+        line-height: 1.5;
     }
 
-    /* Result Box in Predictor */
-    .result-box {
-        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-        border: 1px solid rgba(99, 102, 241, 0.3);
-        border-radius: 16px;
-        padding: 1.8rem;
-        text-align: center;
-        margin-top: 1rem;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    /* Custom Streamlit adjustments for light theme */
+    div[data-testid="stSidebar"] {
+        background-color: #f8fafc;
+        border-right: 1px solid #e2e8f0;
     }
-    .result-tag {
-        font-size: 0.85rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        font-weight: 700;
-        color: #818cf8;
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        border-bottom: 2px solid #e2e8f0;
     }
-    .result-name {
-        font-size: 2.2rem;
-        font-weight: 800;
-        color: #ffffff;
-        margin: 0.5rem 0;
+    .stTabs [data-baseweb="tab"] {
+        font-weight: 500;
+        color: #64748b;
+        padding: 8px 16px;
+        border-radius: 6px 6px 0 0;
+    }
+    .stTabs [aria-selected="true"] {
+        color: #0284c7 !important;
+        font-weight: 600 !important;
+        border-bottom: 2px solid #0284c7 !important;
     }
     </style>
     """,
@@ -174,7 +200,7 @@ st.markdown(
 )
 
 # ==============================================================================
-# 2. MODEL & DATA INFRASTRUCTURE
+# 2. DATA PROCESSING & MODEL PIPELINE
 # ==============================================================================
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
@@ -183,27 +209,24 @@ MODEL_PATH = MODEL_DIR / "customer_segmentation_model.pkl"
 
 FEATURES = ["Recence", "Frequence", "Montant"]
 
-SEGMENT_METADATA = {
+SEGMENT_DETAILS = {
     "Clients a forte valeur": {
-        "badge_color": "#10B981",
-        "icon": "💎",
-        "short_name": "VIP Champions",
-        "tagline": "Clients réguliers avec fort pouvoir d'achat et engagement continu",
-        "action": "⭐ Programme VIP Concierge, avant-premières exclusives, cadeaux de fidélité et support dédié.",
+        "color": "#0284c7",
+        "label": "High-Value Champions",
+        "desc": "Frequent buyers with substantial total lifetime expenditure.",
+        "strategy": "Dedicated VIP loyalty tier, priority support access, and early product previews.",
     },
     "Clients intermediaires": {
-        "badge_color": "#6366F1",
-        "icon": "📈",
-        "short_name": "Core Loyalists",
-        "tagline": "Fréquence et panier moyen stables avec potentiel d'upsell",
-        "action": "🎁 Offres groupées (cross-sell), seuil de livraison gratuite incitatif et relances programmées.",
+        "color": "#38bdf8",
+        "label": "Core Regular Buyers",
+        "desc": "Reliable repeat customers with consistent purchase cycles.",
+        "strategy": "Product bundle recommendations, free shipping thresholds, and targeted cross-sell workflows.",
     },
     "Clients occasionnels / inactifs": {
-        "badge_color": "#F59E0B",
-        "icon": "⚠️",
-        "short_name": "At-Risk / Dormant",
-        "tagline": "Achats rares ou anciens nécessitant une stratégie de réactivation",
-        "action": "⏳ Campagne de réactivation agressive, coupons limités dans le temps et sondage de satisfaction.",
+        "color": "#94a3b8",
+        "label": "At-Risk / Dormant Accounts",
+        "desc": "High inactivity duration with minimal historical transactions.",
+        "strategy": "Automated re-engagement sequences, limited-time return incentives, and feedback surveys.",
     },
 }
 
@@ -299,7 +322,7 @@ def train_models(rfm):
     }
 
 
-@st.cache_resource(show_spinner="Chargement de l'intelligence artificielle...")
+@st.cache_resource(show_spinner=False)
 def get_bundle():
     if MODEL_PATH.exists():
         return joblib.load(MODEL_PATH), "loaded"
@@ -318,8 +341,8 @@ def get_bundle():
 bundle, status = get_bundle()
 
 if status == "missing_data" or bundle is None:
-    st.error("🚨 Dataset introuvable dans le dossier data/.")
-    st.info("Veuillez déposer le fichier Online Retail (.xlsx ou .csv) dans data/")
+    st.error("Dataset not found in data/ directory.")
+    st.info("Place Online Retail (.xlsx or .csv) inside data/ to initialize.")
     st.stop()
 
 rfm_df = bundle["rfm"]
@@ -329,136 +352,137 @@ profile_df = bundle["profile"].copy()
 profile_df["Segment"] = profile_df.index.map(segment_names)
 
 # ==============================================================================
-# 3. SIDEBAR NAVIGATION & CONTROLS
+# 3. SIDEBAR NAVIGATION & SYSTEM SETTINGS
 # ==============================================================================
 with st.sidebar:
     st.markdown(
         """
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1.2rem;">
-            <div style="background: linear-gradient(135deg, #6366f1, #3b82f6); width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
-                ⚡
+        <div style="padding-bottom: 0.8rem; border-bottom: 1px solid #e2e8f0; margin-bottom: 1.2rem;">
+            <div style="font-size: 1.15rem; font-weight: 700; color: #0284c7; letter-spacing: -0.02em;">SegmentPulse</div>
+            <div style="font-size: 0.78rem; color: #64748b;">Enterprise RFM Analytics</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("**Workspace Context**")
+    selected_org = st.selectbox(
+        "Store Scope",
+        ["Production Storefront (UK)", "Wholesale Direct", "Retail Partner Network"],
+        label_visibility="collapsed",
+    )
+
+    st.markdown("---")
+    st.markdown("**System Information**")
+    st.markdown(
+        f"""
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; font-size: 0.82rem; line-height: 1.6;">
+            <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">Classifier:</span>
+                <span style="font-weight:600; color:#0f172a;">Random Forest (200)</span>
             </div>
-            <div>
-                <div style="font-weight: 800; font-size: 1.15rem; color: #f8fafc; letter-spacing: -0.02em;">SegmentPulse</div>
-                <div style="font-size: 0.75rem; color: #818cf8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">AI Intelligence Suite</div>
+            <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">Clusters:</span>
+                <span style="font-weight:600; color:#0f172a;">K-Means (k=3)</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">Records:</span>
+                <span style="font-weight:600; color:#0284c7;">{len(rfm_df):,} accounts</span>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    st.markdown("### 🏢 Espace Entreprise")
-    workspace = st.selectbox(
-        "Compte Actif",
-        ["Global E-Commerce Store (UK)", "Retail B2B EMEA", "Omnichannel Direct"],
-        index=0,
-    )
-
     st.markdown("---")
-    st.markdown("### 🛡️ État du Système")
+    st.markdown("**Documentation & Links**")
     st.markdown(
         """
-        <div style="background: #1e293b; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); font-size: 0.82rem;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                <span style="color: #94a3b8;">Moteur ML :</span>
-                <span style="color: #38bdf8; font-weight: 600;">K-Means + RF (200)</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                <span style="color: #94a3b8;">Statut :</span>
-                <span style="color: #34d399; font-weight: 600;">● Opérationnel</span>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-                <span style="color: #94a3b8;">Clients Indexés :</span>
-                <span style="color: #f1f5f9; font-weight: 600;">"""
-        + f"{len(rfm_df):,}"
-        + """</span>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
+        - [GitHub Repository](https://github.com/ilyasaitbel/customer-segmentation)
+        - [Model Artifacts (PKL)](file:///C:/Users/Youcode/.gemini/antigravity/scratch/customer-segmentation/models/customer_segmentation_model.pkl)
+        - [Source Code (app.py)](file:///C:/Users/Youcode/.gemini/antigravity/scratch/customer-segmentation/app.py)
+        """
     )
-
-    st.markdown("---")
-    st.caption("SegmentPulse Enterprise v2.4 • Powered by Scikit-Learn & Antigravity")
+    st.caption("Release 2.4 • Managed Environment")
 
 # ==============================================================================
-# 4. TOP HERO BANNER & KPI METRICS
+# 4. TOP NAVBAR & CORE METRIC STRIP
 # ==============================================================================
 st.markdown(
-    f"""
-    <div class="saas-header">
+    """
+    <div class="saas-navbar">
         <div>
-            <h1 class="saas-title">SegmentPulse AI Platform</h1>
-            <p class="saas-tagline">Segmentation Comportementale RFM Prédictive & Insights Marketing en Temps Réel</p>
+            <h1 class="brand-title">SegmentPulse Analytics</h1>
+            <p class="brand-subtitle">Automated Behavioral Customer Segmentation & RFM Lifecycle Management</p>
         </div>
         <div>
-            <span class="badge-pill">
-                <span class="status-live"></span>
-                Modèle ML v2.4 Actif
-            </span>
+            <div class="status-badge">
+                <span class="dot-pulse"></span>
+                Production System Active
+            </div>
         </div>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-# KPI Calculations
-total_customers = len(rfm_df)
-total_revenue = rfm_df["Montant"].sum()
+# Metric computations
+total_count = len(rfm_df)
+total_gross = rfm_df["Montant"].sum()
 avg_recency = rfm_df["Recence"].mean()
-avg_spend = rfm_df["Montant"].mean()
+avg_revenue = rfm_df["Montant"].mean()
 
-vip_cluster = [k for k, v in segment_names.items() if "forte valeur" in v][0]
-vip_count = (rfm_df["Cluster"] == vip_cluster).sum()
-vip_pct = (vip_count / total_customers) * 100
-vip_rev = rfm_df[rfm_df["Cluster"] == vip_cluster]["Montant"].sum()
-vip_rev_pct = (vip_rev / total_revenue) * 100
+vip_cluster_id = [k for k, v in segment_names.items() if "forte valeur" in v][0]
+vip_records = (rfm_df["Cluster"] == vip_cluster_id).sum()
+vip_percent = (vip_records / total_count) * 100
+vip_gross = rfm_df[rfm_df["Cluster"] == vip_cluster_id]["Montant"].sum()
+vip_gross_share = (vip_gross / total_gross) * 100
 
-col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
+kpi_c1, kpi_c2, kpi_c3, kpi_c4 = st.columns(4)
 
-with col_kpi1:
+with kpi_c1:
     st.markdown(
         f"""
         <div class="kpi-card">
-            <div class="kpi-label">Base Clients Active</div>
-            <div class="kpi-value">{total_customers:,}</div>
-            <span class="kpi-badge kpi-badge-blue">100% Vérifiés</span>
+            <div class="kpi-label">Active Customer Accounts</div>
+            <div class="kpi-val">{total_count:,}</div>
+            <div class="kpi-sub">Indexed in Database</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-with col_kpi2:
+with kpi_c2:
     st.markdown(
         f"""
         <div class="kpi-card">
-            <div class="kpi-label">Cohorte VIP Champions</div>
-            <div class="kpi-value">{vip_count:,} <span style="font-size: 1rem; color: #10b981;">({vip_pct:.1f}%)</span></div>
-            <span class="kpi-badge kpi-badge-green">{vip_rev_pct:.1f}% du Chiffre d'Affaires</span>
+            <div class="kpi-label">High-Value Segment</div>
+            <div class="kpi-val">{vip_records:,} <span style="font-size: 1rem; color: #0284c7; font-weight: 500;">({vip_percent:.1f}%)</span></div>
+            <div class="kpi-sub">{vip_gross_share:.1f}% of total gross revenue</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-with col_kpi3:
+with kpi_c3:
     st.markdown(
         f"""
         <div class="kpi-card">
-            <div class="kpi-label">Valeur Client Moyenne (LTV)</div>
-            <div class="kpi-value">{avg_spend:,.0f} €</div>
-            <span class="kpi-badge kpi-badge-purple">Global RFM</span>
+            <div class="kpi-label">Mean Lifetime Value</div>
+            <div class="kpi-val">{avg_revenue:,.2f} €</div>
+            <div class="kpi-sub">Average per Customer</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-with col_kpi4:
+with kpi_c4:
     st.markdown(
         f"""
         <div class="kpi-card">
-            <div class="kpi-label">Récence Moyenne</div>
-            <div class="kpi-value">{avg_recency:.0f} jours</div>
-            <span class="kpi-badge kpi-badge-amber">Dernière Transaction</span>
+            <div class="kpi-label">Mean Recency Window</div>
+            <div class="kpi-val">{avg_recency:.1f} days</div>
+            <div class="kpi-sub">Since Last Transaction</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -467,133 +491,132 @@ with col_kpi4:
 st.write("")
 
 # ==============================================================================
-# 5. MAIN NAVIGATION TABS
+# 5. WORKSPACE TABS (CLEAN HUMAN-CRAFTED DESIGN)
 # ==============================================================================
-tab_overview, tab_simulator, tab_explorer, tab_model = st.tabs(
+tab_analytics, tab_sim, tab_data, tab_sys = st.tabs(
     [
-        "📊 Vue d'Ensemble & Cohortes",
-        "🎯 Simulateur RFM & Prédiction Live",
-        "🔍 Explorateur de Clients & Export",
-        "⚙️ Architecture & Santé du Modèle",
+        "Cohort Analytics",
+        "Customer Simulator",
+        "Customer Directory",
+        "Model Governance",
     ]
 )
 
-# ------------------------------------------------------------------------------
-# TAB 1: EXECUTIVE OVERVIEW & COHORTS
-# ------------------------------------------------------------------------------
-with tab_overview:
-    col_chart1, col_chart2 = st.columns([1, 1])
+sky_colors = {
+    "Clients a forte valeur": "#0284c7",
+    "Clients intermediaires": "#38bdf8",
+    "Clients occasionnels / inactifs": "#94a3b8",
+}
 
-    color_map = {
-        "Clients a forte valeur": "#10B981",
-        "Clients intermediaires": "#6366F1",
-        "Clients occasionnels / inactifs": "#F59E0B",
-    }
+# ------------------------------------------------------------------------------
+# TAB 1: COHORT ANALYTICS
+# ------------------------------------------------------------------------------
+with tab_analytics:
+    ch_col1, ch_col2 = st.columns([1, 1])
 
-    with col_chart1:
-        st.markdown("#### 🍩 Répartition des Segments Clients")
-        seg_counts = rfm_df["Segment"].value_counts().reset_index()
-        seg_counts.columns = ["Segment", "Count"]
+    with ch_col1:
+        st.markdown("##### Account Distribution by Segment")
+        counts = rfm_df["Segment"].value_counts().reset_index()
+        counts.columns = ["Segment", "Count"]
 
         fig_pie = px.pie(
-            seg_counts,
+            counts,
             values="Count",
             names="Segment",
             color="Segment",
-            color_discrete_map=color_map,
-            hole=0.6,
+            color_discrete_map=sky_colors,
+            hole=0.62,
         )
         fig_pie.update_traces(
             textposition="inside",
             textinfo="percent+label",
             hoverinfo="label+value+percent",
-            marker=dict(line=dict(color="#0f172a", width=2)),
+            marker=dict(line=dict(color="#ffffff", width=2)),
         )
         fig_pie.update_layout(
+            template="plotly_white",
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#e2e8f0"),
+            font=dict(color="#334155", family="Inter"),
             showlegend=False,
-            margin=dict(t=10, b=10, l=10, r=10),
-            height=320,
+            margin=dict(t=15, b=15, l=15, r=15),
+            height=300,
         )
         st.plotly_chart(fig_pie, use_container_width=True)
 
-    with col_chart2:
-        st.markdown("#### 💶 Chiffre d'Affaires Généré par Segment")
-        seg_revenue = rfm_df.groupby("Segment")["Montant"].sum().reset_index()
-        fig_rev = px.bar(
-            seg_revenue,
+    with ch_col2:
+        st.markdown("##### Total Gross Revenue by Segment")
+        rev_by_seg = rfm_df.groupby("Segment")["Montant"].sum().reset_index()
+
+        fig_bar = px.bar(
+            rev_by_seg,
             x="Segment",
             y="Montant",
             color="Segment",
-            color_discrete_map=color_map,
+            color_discrete_map=sky_colors,
             text_auto=".2s",
         )
-        fig_rev.update_layout(
+        fig_bar.update_layout(
+            template="plotly_white",
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#e2e8f0"),
+            font=dict(color="#334155", family="Inter"),
             xaxis=dict(showgrid=False, title=""),
-            yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.06)", title="Montant Total (€)"),
+            yaxis=dict(showgrid=True, gridcolor="#f1f5f9", title="Gross Revenue (€)"),
             showlegend=False,
-            margin=dict(t=10, b=10, l=10, r=10),
-            height=320,
+            margin=dict(t=15, b=15, l=15, r=15),
+            height=300,
         )
-        st.plotly_chart(fig_rev, use_container_width=True)
+        st.plotly_chart(fig_bar, use_container_width=True)
 
     st.markdown("---")
+    st.markdown("##### Interactive 3D RFM Clustering Space")
+    st.caption("Rotate, pan, and zoom to explore how K-Means partitions customers across Recency, Frequency, and Monetary dimensions.")
 
-    # 3D Interactive Cluster Scatter Plot
-    st.markdown("#### 🌌 Visualisation 3D Interactive de l'Espace RFM")
-    st.caption("Naviguez, zoomez et pivotez dans l'espace pour observer les regroupements tridimensionnels déterminés par l'algorithme K-Means.")
-
-    # Sample for smooth 3D rendering
-    sample_df = rfm_df.sample(n=min(1200, len(rfm_df)), random_state=42)
+    sample_rfm = rfm_df.sample(n=min(1200, len(rfm_df)), random_state=42)
 
     fig_3d = px.scatter_3d(
-        sample_df,
+        sample_rfm,
         x="Recence",
         y="Frequence",
         z="Montant",
         color="Segment",
-        color_discrete_map=color_map,
+        color_discrete_map=sky_colors,
         hover_data=["CustomerID", "Recence", "Frequence", "Montant"],
         opacity=0.75,
         log_z=True,
     )
     fig_3d.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#cbd5e1"),
+        template="plotly_white",
+        paper_bgcolor="#ffffff",
+        font=dict(color="#334155", family="Inter"),
         scene=dict(
-            xaxis=dict(title="Récence (jours)", backgroundcolor="rgba(15,23,42,0.6)", gridcolor="rgba(255,255,255,0.1)"),
-            yaxis=dict(title="Fréquence (achats)", backgroundcolor="rgba(15,23,42,0.6)", gridcolor="rgba(255,255,255,0.1)"),
-            zaxis=dict(title="Montant Log (€)", backgroundcolor="rgba(15,23,42,0.6)", gridcolor="rgba(255,255,255,0.1)"),
+            xaxis=dict(title="Recency (Days)", backgroundcolor="#f0f9ff", gridcolor="#e2e8f0"),
+            yaxis=dict(title="Frequency (Orders)", backgroundcolor="#f0f9ff", gridcolor="#e2e8f0"),
+            zaxis=dict(title="Monetary Log (€)", backgroundcolor="#f0f9ff", gridcolor="#e2e8f0"),
         ),
-        margin=dict(l=0, r=0, b=0, t=20),
-        height=520,
+        margin=dict(l=0, r=0, b=0, t=10),
+        height=500,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
     st.plotly_chart(fig_3d, use_container_width=True)
 
-    # Strategic Segment Matrix
-    st.markdown("#### 🎯 Stratégie Marketing & Playbook par Segment")
-    strat_col1, strat_col2, strat_col3 = st.columns(3)
+    st.markdown("##### Lifecycle Marketing Strategic Playbooks")
+    strat1, strat2, strat3 = st.columns(3)
 
-    for col, (seg_key, meta) in zip([strat_col1, strat_col2, strat_col3], SEGMENT_METADATA.items()):
-        sub_df = rfm_df[rfm_df["Segment"] == seg_key]
+    for col, (k, meta) in zip([strat1, strat2, strat3], SEGMENT_DETAILS.items()):
+        sub_count = (rfm_df["Segment"] == k).sum()
         with col:
             st.markdown(
                 f"""
-                <div style="background: #1e293b; border-left: 4px solid {meta['badge_color']}; border-radius: 12px; padding: 1.2rem; border-top: 1px solid rgba(255,255,255,0.06); border-right: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06);">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                        <span style="font-size: 1.4rem;">{meta['icon']}</span>
-                        <span style="background: rgba(255,255,255,0.08); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; color: {meta['badge_color']};">{len(sub_df):,} clients</span>
+                <div class="panel-card" style="border-top: 3px solid {meta['color']};">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                        <span style="font-weight:700; color:#0f172a; font-size: 1rem;">{meta['label']}</span>
+                        <span style="font-size:0.75rem; background:#f0f9ff; color:#0284c7; padding:2px 8px; border-radius:4px; font-weight:600;">{sub_count:,} accounts</span>
                     </div>
-                    <div style="font-weight: 700; font-size: 1.05rem; color: #f8fafc; margin-bottom: 4px;">{meta['short_name']}</div>
-                    <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 12px;">{meta['tagline']}</div>
-                    <div style="font-size: 0.82rem; background: rgba(0,0,0,0.25); padding: 10px; border-radius: 8px; color: #e2e8f0; line-height: 1.4;">
-                        <strong>Action recommandée :</strong><br>{meta['action']}
+                    <div style="font-size:0.82rem; color:#64748b; margin-bottom:12px;">{meta['desc']}</div>
+                    <div style="background:#f8fafc; border: 1px solid #e2e8f0; border-radius:6px; padding:10px; font-size:0.8rem; color:#1e293b; line-height:1.45;">
+                        <strong style="color:#0284c7;">Action Framework:</strong><br>{meta['strategy']}
                     </div>
                 </div>
                 """,
@@ -601,103 +624,100 @@ with tab_overview:
             )
 
 # ------------------------------------------------------------------------------
-# TAB 2: LIVE SIMULATOR & PREDICTOR
+# TAB 2: CUSTOMER SIMULATOR
 # ------------------------------------------------------------------------------
-with tab_simulator:
-    st.markdown("### 🧪 Simulateur Prédictif de Profil Client")
-    st.caption("Ajustez les indicateurs RFM pour évaluer instantanément l'attribution du segment et obtenir la recommandation d'action automatique.")
+with tab_sim:
+    st.markdown("##### Real-Time Behavioral RFM Predictor")
+    st.caption("Adjust customer behavioral indicators or select a preset profile to test the classification engine.")
 
-    st.markdown("##### ⚡ Préréglages Rapides (Presets)")
-    p_col1, p_col2, p_col3 = st.columns(3)
-    if "sim_r" not in st.session_state:
-        st.session_state.sim_r = 15
-        st.session_state.sim_f = 12
-        st.session_state.sim_m = 6500.0
+    # Presets with clean text labels (no childish emojis)
+    b_col1, b_col2, b_col3 = st.columns(3)
+    if "s_r" not in st.session_state:
+        st.session_state.s_r = 14
+        st.session_state.s_f = 12
+        st.session_state.s_m = 6800.0
 
-    if p_col1.button("💎 Client Champion VIP", use_container_width=True):
-        st.session_state.sim_r = 8
-        st.session_state.sim_f = 18
-        st.session_state.sim_m = 9200.0
+    if b_col1.button("Preset: High-Value VIP Client", use_container_width=True):
+        st.session_state.s_r = 8
+        st.session_state.s_f = 16
+        st.session_state.s_m = 8900.0
         st.rerun()
 
-    if p_col2.button("📈 Client Intermédiaire Standard", use_container_width=True):
-        st.session_state.sim_r = 40
-        st.session_state.sim_f = 4
-        st.session_state.sim_m = 1200.0
+    if b_col2.button("Preset: Regular Core Buyer", use_container_width=True):
+        st.session_state.s_r = 38
+        st.session_state.s_f = 4
+        st.session_state.s_m = 1350.0
         st.rerun()
 
-    if p_col3.button("⚠️ Client Dormant / Churn", use_container_width=True):
-        st.session_state.sim_r = 180
-        st.session_state.sim_f = 1
-        st.session_state.sim_m = 250.0
+    if b_col3.button("Preset: At-Risk Inactive Account", use_container_width=True):
+        st.session_state.s_r = 195
+        st.session_state.s_f = 1
+        st.session_state.s_m = 280.0
         st.rerun()
 
     st.write("")
-    sim_input_col, sim_result_col = st.columns([1.1, 1])
+    in_col, out_col = st.columns([1.1, 1])
 
-    with sim_input_col:
+    with in_col:
         st.markdown(
             """
-            <div style="background: #1e293b; padding: 1.4rem; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08);">
-                <div style="font-weight: 700; font-size: 1rem; color: #f8fafc; margin-bottom: 1rem;">Paramètres RFM du Client</div>
+            <div class="panel-card">
+                <div class="panel-header">Behavioral Input Parameters</div>
             """,
             unsafe_allow_html=True,
         )
 
-        in_recence = st.slider(
-            "⏳ Récence (Jours depuis le dernier achat)",
+        val_recence = st.slider(
+            "Recency Window (Days elapsed since last purchase)",
             min_value=1,
             max_value=380,
-            value=int(st.session_state.sim_r),
-            help="Nombre de jours écoulés depuis la date de la dernière commande enregistrée.",
+            value=int(st.session_state.s_r),
+            help="Days since the customer's most recent completed order.",
         )
 
-        in_frequence = st.slider(
-            "🛍️ Fréquence (Nombre total de commandes passées)",
+        val_frequence = st.slider(
+            "Order Frequency (Lifetime completed invoices)",
             min_value=1,
             max_value=100,
-            value=int(st.session_state.sim_f),
-            help="Total des factures uniques générées par ce client.",
+            value=int(st.session_state.s_f),
+            help="Total count of unique historical transactions.",
         )
 
-        in_montant = st.number_input(
-            "💶 Montant Total Dépensé (€)",
+        val_montant = st.number_input(
+            "Cumulative Expenditure (€)",
             min_value=1.0,
             max_value=100000.0,
-            value=float(st.session_state.sim_m),
+            value=float(st.session_state.s_m),
             step=50.0,
-            help="Somme totale de la valeur des articles achetés.",
+            help="Total gross currency spent across all historical invoices.",
         )
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # Perform Model Inference
-    input_df = pd.DataFrame([[in_recence, in_frequence, in_montant]], columns=FEATURES)
-    pred_cluster = int(rf_model.predict(input_df)[0])
-    pred_segment = segment_names.get(pred_cluster, f"Cluster {pred_cluster}")
-    pred_probs = rf_model.predict_proba(input_df)[0]
-    classes = rf_model.classes_
+    # Inference
+    sample_input = pd.DataFrame([[val_recence, val_frequence, val_montant]], columns=FEATURES)
+    cluster_pred = int(rf_model.predict(sample_input)[0])
+    segment_pred = segment_names.get(cluster_pred, f"Cluster {cluster_pred}")
+    probs = rf_model.predict_proba(sample_input)[0]
+    class_list = rf_model.classes_
 
-    meta = SEGMENT_METADATA.get(pred_segment, {
-        "badge_color": "#6366F1",
-        "icon": "🎯",
-        "short_name": pred_segment,
-        "tagline": "Segment client prédit",
-        "action": "Personnalisez votre communication.",
+    details = SEGMENT_DETAILS.get(segment_pred, {
+        "color": "#0284c7",
+        "label": segment_pred,
+        "desc": "Predicted customer segment.",
+        "strategy": "Engage according to organizational guidelines.",
     })
 
-    with sim_result_col:
+    with out_col:
         st.markdown(
             f"""
-            <div class="result-box">
-                <div class="result-tag">Segment Identifié par Random Forest</div>
-                <div style="font-size: 2.8rem; margin: 0.3rem 0;">{meta['icon']}</div>
-                <div class="result-name" style="color: {meta['badge_color']};">{meta['short_name']}</div>
-                <div style="font-size: 0.95rem; color: #cbd5e1; margin-bottom: 1.2rem;">{meta['tagline']}</div>
-                
-                <div style="background: rgba(255,255,255,0.06); padding: 12px; border-radius: 10px; text-align: left; border-left: 3px solid {meta['badge_color']};">
-                    <span style="font-weight: 700; color: #f8fafc; font-size: 0.85rem;">⚡ Plan d'Action Automatique :</span><br>
-                    <span style="font-size: 0.85rem; color: #cbd5e1;">{meta['action']}</span>
+            <div class="result-panel">
+                <span class="result-badge">Random Forest Output</span>
+                <div class="result-title">{details['label']}</div>
+                <div class="result-description">{details['desc']}</div>
+                <div class="action-box">
+                    <strong style="color: #0284c7;">Automated Next-Best-Action:</strong><br>
+                    {details['strategy']}
                 </div>
             </div>
             """,
@@ -705,98 +725,97 @@ with tab_simulator:
         )
 
         st.write("")
-        st.markdown("##### 📊 Distribution des Probabilités du Modèle")
-        for cls_idx, prob in zip(classes, pred_probs):
-            cls_seg = segment_names.get(cls_idx, f"Cluster {cls_idx}")
-            seg_info = SEGMENT_METADATA.get(cls_seg, {"short_name": cls_seg, "badge_color": "#818cf8"})
-            st.write(f"**{seg_info['short_name']}** — `{prob*100:.1f}%`")
-            st.progress(float(prob))
+        st.markdown("##### Class Probability Distribution")
+        for c_idx, p_val in zip(class_list, probs):
+            c_name = segment_names.get(c_idx, f"Cluster {c_idx}")
+            c_label = SEGMENT_DETAILS.get(c_name, {}).get("label", c_name)
+            st.write(f"**{c_label}** — `{p_val*100:.1f}%`")
+            st.progress(float(p_val))
 
 # ------------------------------------------------------------------------------
-# TAB 3: CUSTOMER EXPLORER & CRM EXPORT
+# TAB 3: CUSTOMER DIRECTORY & EXPORT
 # ------------------------------------------------------------------------------
-with tab_explorer:
-    st.markdown("### 🔍 Explorateur de Données & Exportation CRM")
-    st.caption("Filtrez les comptes clients par segment, panier moyen ou récence pour exporter vos listes vers Klaviyo, HubSpot ou Salesforce.")
+with tab_data:
+    st.markdown("##### Customer Database Directory")
+    st.caption("Filter and export segmented customer accounts for synchronisation with marketing automation and CRM tooling.")
 
-    f_col1, f_col2, f_col3 = st.columns(3)
-    with f_col1:
-        sel_segment = st.selectbox(
-            "Filtrer par Segment",
-            ["Tous les Segments"] + list(segment_names.values()),
+    f1, f2, f3 = st.columns(3)
+    with f1:
+        filter_segment = st.selectbox(
+            "Cohort Filter",
+            ["All Cohorts"] + list(segment_names.values()),
         )
-    with f_col2:
-        min_spend_filter = st.number_input("Dépense Minimale (€)", min_value=0.0, value=0.0, step=100.0)
-    with f_col3:
-        search_cust = st.text_input("Rechercher un CustomerID", placeholder="ex: 12347")
+    with f2:
+        filter_min_spend = st.number_input("Minimum Lifetime Spend (€)", min_value=0.0, value=0.0, step=100.0)
+    with f3:
+        search_id = st.text_input("Lookup Account (CustomerID)", placeholder="e.g. 12347")
 
-    filtered_df = rfm_df.copy()
-    if sel_segment != "Tous les Segments":
-        filtered_df = filtered_df[filtered_df["Segment"] == sel_segment]
-    if min_spend_filter > 0:
-        filtered_df = filtered_df[filtered_df["Montant"] >= min_spend_filter]
-    if search_cust.strip():
-        filtered_df = filtered_df[filtered_df["CustomerID"].astype(str).str.contains(search_cust.strip())]
+    data_view = rfm_df.copy()
+    if filter_segment != "All Cohorts":
+        data_view = data_view[data_view["Segment"] == filter_segment]
+    if filter_min_spend > 0:
+        data_view = data_view[data_view["Montant"] >= filter_min_spend]
+    if search_id.strip():
+        data_view = data_view[data_view["CustomerID"].astype(str).str.contains(search_id.strip())]
 
-    st.markdown(f"**{len(filtered_df):,} clients trouvés** correspondant aux critères sélectionnés :")
+    st.markdown(f"**{len(data_view):,} accounts match the active filter criteria**")
 
-    # Format numbers for professional SaaS display
-    display_df = filtered_df[["CustomerID", "Segment", "Recence", "Frequence", "Montant"]].copy()
-    display_df["Montant"] = display_df["Montant"].map(lambda x: f"{x:,.2f} €")
-    display_df.rename(
+    formatted_table = data_view[["CustomerID", "Segment", "Recence", "Frequence", "Montant"]].copy()
+    formatted_table["Montant"] = formatted_table["Montant"].map(lambda x: f"{x:,.2f} €")
+    formatted_table.rename(
         columns={
-            "CustomerID": "ID Client",
-            "Segment": "Segment Prédit",
-            "Recence": "Récence (Jours)",
-            "Frequence": "Fréquence (Commandes)",
-            "Montant": "Montant Total Décaissé",
+            "CustomerID": "Customer ID",
+            "Segment": "Segment Classification",
+            "Recence": "Recency (Days)",
+            "Frequence": "Order Count",
+            "Montant": "Gross Total (€)",
         },
         inplace=True,
     )
 
-    st.dataframe(display_df, use_container_width=True, height=360)
+    st.dataframe(formatted_table, use_container_width=True, height=360)
 
-    # Export Button
-    csv_data = filtered_df.to_csv(index=False).encode("utf-8")
+    csv_payload = data_view.to_csv(index=False).encode("utf-8")
     st.download_button(
-        label="📥 Télécharger la Sélection (Format CSV pour CRM)",
-        data=csv_data,
-        file_name="segmentpulse_customer_cohort.csv",
+        label="Export Active Cohort (CSV)",
+        data=csv_payload,
+        file_name="segmentpulse_customer_export.csv",
         mime="text/csv",
         use_container_width=True,
     )
 
 # ------------------------------------------------------------------------------
-# TAB 4: MODEL ARCHITECTURE & GOVERNANCE
+# TAB 4: MODEL GOVERNANCE & DIAGNOSTICS
 # ------------------------------------------------------------------------------
-with tab_model:
-    st.markdown("### ⚙️ Architecture du Modèle & Explicabilité")
-    st.caption("Détails d'entraînement, importance des variables et métriques de validation statistique.")
+with tab_sys:
+    st.markdown("##### Machine Learning Governance & Explainability")
+    st.caption("Feature contribution factors, cluster centers, and validation metrics.")
 
-    m_col1, m_col2 = st.columns([1, 1])
+    gov_c1, gov_c2 = st.columns([1, 1])
 
-    with m_col1:
-        st.markdown("#### ⚖️ Importance des Variables (Feature Importance)")
-        importances = rf_model.feature_importances_
-        fi_df = pd.DataFrame({
-            "Feature": ["Récence", "Fréquence", "Montant Total"],
-            "Importance": importances,
-        }).sort_values("Importance", ascending=True)
+    with gov_c1:
+        st.markdown("###### Feature Importance (Random Forest Gini Impurity)")
+        feat_imp = rf_model.feature_importances_
+        imp_df = pd.DataFrame({
+            "Feature": ["Recency Window", "Order Frequency", "Monetary Expenditure"],
+            "Weight": feat_imp,
+        }).sort_values("Weight", ascending=True)
 
         fig_fi = px.bar(
-            fi_df,
-            x="Importance",
+            imp_df,
+            x="Weight",
             y="Feature",
             orientation="h",
             text_auto=".2%",
-            color="Importance",
-            color_continuous_scale="Purples",
+            color="Weight",
+            color_continuous_scale="Blues",
         )
         fig_fi.update_layout(
+            template="plotly_white",
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#e2e8f0"),
-            xaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.06)", title="Poids Relatif"),
+            font=dict(color="#334155", family="Inter"),
+            xaxis=dict(showgrid=True, gridcolor="#f1f5f9", title="Relative Weight"),
             yaxis=dict(title=""),
             coloraxis_showscale=False,
             height=260,
@@ -804,35 +823,29 @@ with tab_model:
         )
         st.plotly_chart(fig_fi, use_container_width=True)
 
-    with m_col2:
-        st.markdown("#### 📐 Profils Moyens par Cluster (Centroids)")
-        centroid_display = profile_df.copy()
-        centroid_display["Montant"] = centroid_display["Montant"].map(lambda x: f"{x:,.2f} €")
-        centroid_display["Recence"] = centroid_display["Recence"].map(lambda x: f"{x:.1f} j")
-        centroid_display["Frequence"] = centroid_display["Frequence"].map(lambda x: f"{x:.1f} cmds")
-        st.dataframe(centroid_display[["Segment", "Recence", "Frequence", "Montant"]], use_container_width=True, height=260)
+    with gov_c2:
+        st.markdown("###### Cluster Centroids (Mean Baseline)")
+        centroid_view = profile_df.copy()
+        centroid_view["Montant"] = centroid_view["Montant"].map(lambda x: f"{x:,.2f} €")
+        centroid_view["Recence"] = centroid_view["Recence"].map(lambda x: f"{x:.1f} days")
+        centroid_view["Frequence"] = centroid_view["Frequence"].map(lambda x: f"{x:.1f} orders")
+        centroid_view.rename(
+            columns={
+                "Segment": "Segment",
+                "Recence": "Mean Recency",
+                "Frequence": "Mean Frequency",
+                "Montant": "Mean Spend",
+            },
+            inplace=True,
+        )
+        st.dataframe(centroid_view[["Segment", "Mean Recency", "Mean Frequency", "Mean Spend"]], use_container_width=True, height=260)
 
     st.markdown("---")
-    st.markdown("#### 📋 Spécifications Techniques du Pipeline")
-    spec_col1, spec_col2, spec_col3 = st.columns(3)
-    with spec_col1:
-        st.markdown(
-            """
-            - **Algorithme Non-Supervisé :** K-Means (k=3, n_init=10, random_state=42)
-            - **Transformation :** Log-transformation `np.log1p()` + `StandardScaler`
-            """
-        )
-    with spec_col2:
-        st.markdown(
-            """
-            - **Classifieur Supervisé :** Random Forest (200 estimateurs)
-            - **Stratification :** 80% Entraînement / 20% Test
-            """
-        )
-    with spec_col3:
-        st.markdown(
-            """
-            - **Source de Données :** Transactions Online Retail (UK)
-            - **Latence d'Inférence :** < 2.5 ms
-            """
-        )
+    st.markdown("###### Architecture References & Governance")
+    st.markdown(
+        """
+        - **Pipeline Pipeline:** `Log1p -> StandardScaler -> KMeans(k=3) -> RandomForestClassifier(n_estimators=200)`
+        - **Data Integrity:** Deduplicated transaction IDs, cleaned zero/negative pricing, customer ID validation.
+        - **Repository Link:** [github.com/ilyasaitbel/customer-segmentation](https://github.com/ilyasaitbel/customer-segmentation)
+        """
+    )
